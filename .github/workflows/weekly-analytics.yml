@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: multipost15-${{ github.workflow }}
+  group: multipost15-pipeline
   cancel-in-progress: false
 
 permissions:
@@ -46,5 +46,24 @@ jobs:
           git config user.name "saqibaliofficial1995-crypto"
           git config user.email "saqibaliofficial1995@gmail.com"
           git add reports/
-          git diff --staged --quiet || git commit -m "Automated analytics report [skip ci]"
-          git push origin main
+          if git diff --staged --quiet; then
+            echo "No reports changes to commit."
+          else
+            git commit -m "Automated analytics report [skip ci]"
+            pushed=false
+            for attempt in 1 2 3; do
+              echo "Pulling latest main with rebase (attempt $attempt/3)..."
+              git pull --rebase origin main || true
+              if git push; then
+                pushed=true
+                echo "Successfully pushed analytics reports."
+                break
+              fi
+              echo "Push failed, sleeping before retry..."
+              sleep 5
+            done
+            if [ "$pushed" = false ]; then
+              echo "Failed to push analytics report after 3 attempts."
+              exit 1
+            fi
+          fi

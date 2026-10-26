@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: multipost15-${{ github.workflow }}
+  group: multipost15-pipeline
   cancel-in-progress: false
 
 permissions:
